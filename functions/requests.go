@@ -2,8 +2,10 @@ package functions
 
 import (
 	"api-tester/structs"
+	"api-tester/utils"
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -13,20 +15,27 @@ func GetParametersFromData(){
 }
 
 // Use the parameters to send an API request to that server
-func ExecuteRequest(method string, data string, url string) structs.Response{
+func ExecuteRequest(method string, url string, data io.ReadCloser) structs.Response{
 	// Get the string to be a byte array
-	body := []byte(data)
-	bodyReader := bytes.NewReader(body)
+	var body []byte; 
+	var err error = nil;
+
+	if(data == nil){
+		body = []byte{};
+	} else{
+		body, err = io.ReadAll(data)
+		if err != nil {
+			fmt.Println("Error reading data")
+			return utils.ReturnErrorObject("Error reading data", http.StatusInternalServerError)
+		}
+	}
 	// Switch case
 	switch method {
-	case "get":
-		response := HttpGet(url, bodyReader)
+	case "GET":
+		response := HttpGet(url, bytes.NewReader(body))
 		return response
 	default:
 		fmt.Println("Invalid Http method")
-		return structs.Response{
-			StatusCode: http.StatusInternalServerError,
-			Data: "Invalid HTTP method",
-		}
+		return utils.ReturnErrorObject("Invalid Http method", http.StatusBadRequest)
 	}
 }

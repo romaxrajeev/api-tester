@@ -13,5 +13,5 @@ type Request struct{
 
 type Response struct{
 	StatusCode uint16
-	Data string
+	Data []byte
 }
